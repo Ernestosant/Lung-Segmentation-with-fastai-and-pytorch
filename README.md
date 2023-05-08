@@ -16,6 +16,7 @@ To train and evaluate the segmentation models, a custom dataset was built from t
 7. graphviz
 8. torch
 9. gradio
+10. python = 3.7.9
 
 
 ## Models
