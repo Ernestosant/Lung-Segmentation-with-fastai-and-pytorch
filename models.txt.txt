@@ -1,0 +1,14 @@
+This file contains information about the models implemented in this repository.
+Below is a list of available models.
+
+"unet_resnet_18_epoch10"
+This model has a unet architecture with self-attention mechanisms. Use a resnet18 pretrained
+model as encoder with frozen weights. The decoding layer is trained for 10 epochs. A precision
+of 98.71% was achieved.
+
+"resnet34_Dlr"
+This model has a unet architecture with self-attention mechanisms. It uses a resnet34 pretrained
+model as the encoder. Training was carried out with the pretrained weights frozen for 5 epochs, then
+all the weights were unfrozen and training with a discriminative learning rate was carried out for 12
+epochs and finally the model was trained with five epochs with a fixed learning rate. A precision of 98.75%
+was achieved.

@@ -1,0 +1,8 @@
+opencv-python
+fastcore
+fastai
+torchviz
+Pillow
+numpy
+graphviz
+torch
