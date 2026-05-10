@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lung-segmentation-fastai-pytorch"
+version = "0.1.0"
+description = "Reproducible fastai/PyTorch pipeline for lung field segmentation in chest X-ray images."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+  { name = "Ernesto Sant" }
+]
+dependencies = [
+  "fastai>=2.7,<3",
+  "torch>=2.1",
+  "torchvision>=0.16",
+  "opencv-python>=4.8",
+  "gradio>=4.0",
+  "numpy>=1.24",
+  "Pillow>=10",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "ruff>=0.5",
+]
+
+[project.scripts]
+lungseg-train = "lung_segmentation.cli.train:main"
+lungseg-evaluate = "lung_segmentation.cli.evaluate:main"
+lungseg-predict = "lung_segmentation.cli.predict:main"
+lungseg-app = "lung_segmentation.cli.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
