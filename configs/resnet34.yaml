@@ -1,0 +1,41 @@
+project:
+  name: lung-segmentation-resnet34
+  seed: 42
+
+data:
+  manifest_path: data/manifest.csv
+  image_size: 128
+  batch_size: 4
+  num_workers: 0
+  codes:
+    - background
+    - lung
+  ignore_index:
+
+model:
+  architecture: unet
+  encoder: resnet34
+  self_attention: true
+  activation: mish
+  optimizer: ranger
+  mixed_precision: false
+
+training:
+  frozen_epochs: 5
+  frozen_lr: 0.002
+  unfrozen_epochs: 12
+  unfrozen_lr_low: 0.000004
+  unfrozen_lr_high: 0.001
+  final_epochs: 5
+  final_lr: 0.0004
+
+preprocessing:
+  equalize_histogram: true
+  binarize_masks: true
+  mask_threshold: 127
+
+artifacts:
+  output_dir: artifacts/models
+  export_name: resnet34_Dlr.pkl
+  metrics_dir: artifacts/metrics
+  predictions_dir: artifacts/predictions

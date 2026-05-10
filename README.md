@@ -1,33 +1,135 @@
-# Lung-Segmentation-with-fastai-and-pytorch
-This repository contains different implementations of deep learning models for the segmentation of the lung region in chest x-ray images using pytorch and fastai.
+# Lung Segmentation with fastai and PyTorch
 
-![A sample of a lung segmentation with our model](segmentation.PNG)
+Reproducible research pipeline for lung field segmentation in chest X-ray images.
+The project trains and evaluates U-Net models with fastai/PyTorch and provides a
+Gradio interface for model inspection.
 
-## Dataset
-To train and evaluate the segmentation models, a custom dataset was built from the mixture of the Montgonery data set and 200 images of patients infected with COVID-19 whose segmentation masks were obtained manually by radiologists. The dataset contains 1520 images with a resolution of 128x128 and  their respective masks.
+![Sample lung segmentation](segmentation.PNG)
 
-## Requirements
-1. opencv-python
-2. fastcore
-3. fastai
-4. torchviz
-5. Pillow
-6. numpy
-7. graphviz
-8. torch
-9. gradio
-10. python = 3.7.9
+## Research Positioning
 
+This repository is an educational and research-oriented implementation. It is
+not a medical device and must not be used for diagnosis, treatment, triage, or
+clinical decision making.
 
-## Models
-Various segmentation models of the lung region are provided in this repository. Each model is implemented in the jupyter notebook [training_experiments.ipynb](training_experiments.ipynb), and a brief description of each is provided in the ["models.txt"](models.txt.txt) file. 
+The project is organized to make experiments traceable:
 
-## Try the models
-All the models have been disployed in a hugging face spaces interface [here](https://huggingface.co/spaces/ErnestoST5/Lung_segmentation_base_line_1).
+- manifest-based dataset definition
+- fixed train/validation/test split
+- Dice and IoU as primary segmentation metrics
+- pixel accuracy as a secondary metric
+- model artifacts kept outside Git history
+- command line workflows for training, evaluation, prediction, and app launch
 
-## Contributions
-Contributions are welcome. If you'd like to contribute to this project, please open an issue first to discuss any major changes you'd like to make. You can also run the models locally by running the app.py script. You can also run the models locally by running the app.py script. Remember to pre-download the model you want to test and change the value of the path_model variable in the [app.py](app.py) script.
+Relevant reporting references:
+[CLAIM](https://www.equator-network.org/reporting-guidelines/checklist-for-artificial-intelligence-in-medical-imaging-claim-a-guide-for-authors-and-reviewers/),
+[TRIPOD+AI](https://www.bmj.com/content/385/bmj.q902),
+[FDA GMLP](https://www.fda.gov/medical-devices/software-medical-device-samd/good-machine-learning-practice-medical-device-development-guiding-principles),
+and [Model Cards](https://huggingface.co/docs/hub/model-cards).
+
+## Repository Layout
+
+```text
+configs/                  Experiment configs for ResNet18 and ResNet34 U-Nets
+data/manifest.csv          Dataset manifest schema, without private images
+docs/                      Dataset, protocol, reproducibility, and model docs
+notebooks/                 Historical Colab notebook
+scripts/                   Utility scripts, including manifest creation
+src/lung_segmentation/     Reusable package code
+tests/                     Unit and CLI smoke tests
+artifacts/                 Local-only model, metric, and prediction outputs
+```
+
+## Setup
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
+
+For GPU training, install the PyTorch build that matches your CUDA runtime
+before installing this package.
+
+## Data Manifest
+
+The project expects `data/manifest.csv` with these columns:
+
+```csv
+image_path,mask_path,source,patient_id,split
+```
+
+Build a manifest from matched image and mask folders:
+
+```powershell
+python scripts/build_manifest.py `
+  --images data/raw/montgomery/img `
+  --masks data/raw/montgomery/msk `
+  --source montgomery `
+  --out data/manifest.csv
+```
+
+If images come from multiple sources, create one manifest per source and merge
+the rows while preserving the same columns. The manifest builder writes paths
+relative to the repository root when possible to avoid committing machine-local
+directory structure. Prefer patient-level splits. If patient identifiers are
+unavailable, use image stems and document this limitation in `docs/dataset.md`.
+
+## Commands
+
+Train:
+
+```powershell
+lungseg-train --config configs/resnet34.yaml
+```
+
+Evaluate:
+
+```powershell
+lungseg-evaluate `
+  --config configs/resnet34.yaml `
+  --checkpoint artifacts/models/resnet34_Dlr.pkl `
+  --split test
+```
+
+Predict:
+
+```powershell
+lungseg-predict `
+  --checkpoint artifacts/models/resnet34_Dlr.pkl `
+  --image path\to\xray.png `
+  --out artifacts/predictions
+```
+
+Launch the app:
+
+```powershell
+lungseg-app --model-dir artifacts/models
+```
+
+The root `app.py` is kept as a compatibility wrapper:
+
+```powershell
+python app.py --model-dir artifacts/models
+```
+
+## Models And Artifacts
+
+Model weights such as `unet_resnet18_epoch10.pkl` and `resnet34_Dlr.pkl` belong
+in `artifacts/models/`. They are intentionally ignored by Git because exported
+fastai learners are large and may encode dataset-specific preprocessing.
+
+Evaluation outputs are written to `artifacts/metrics/`, including per-image CSV
+metrics and JSON summaries with global and per-source Dice, IoU, and pixel
+accuracy.
+
+## Historical Notebook
+
+The original Colab workflow is preserved at
+`notebooks/training_experiments.ipynb`. It is now historical context only; the
+reproducible path is the package and CLI workflow.
 
 ## License
-This project is licensed under the Apache 2.0 License. See the [LICENSE](LICENSE) file for more details.
 
+Apache-2.0. See `LICENSE`.

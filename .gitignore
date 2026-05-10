@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+build/
+dist/
+
+# Local research artifacts. Keep the folders, not the private/large contents.
+artifacts/*
+!artifacts/.gitkeep
+!artifacts/models/.gitkeep
+!artifacts/predictions/.gitkeep
+!artifacts/metrics/.gitkeep
+
+# Medical images and model weights should stay outside Git history.
+data/raw/
+data/processed/
+data/images/
+data/masks/
+*.pkl
+*.pt
+*.pth
+*.onnx
+
+# Generated reports and visualizations.
+reports/
+outputs/
+nombre_del_archivo*
