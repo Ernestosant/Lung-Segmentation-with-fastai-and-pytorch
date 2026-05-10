@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import os
 import random
 from dataclasses import dataclass
 from pathlib import Path
@@ -99,6 +100,7 @@ def build_manifest_from_directories(
 ) -> list[ManifestEntry]:
     """Create a 70/15/15 manifest by matching image and mask filenames."""
 
+    _validate_split_ratios(train_ratio, val_ratio)
     image_dir = resolve_path(images_dir)
     mask_dir = resolve_path(masks_dir)
     output = resolve_path(output_path)
@@ -114,9 +116,7 @@ def build_manifest_from_directories(
         raise ValueError(f"No image/mask filename pairs found in {image_dir} and {mask_dir}")
 
     random.Random(seed).shuffle(matched)
-    n_total = len(matched)
-    n_train = int(n_total * train_ratio)
-    n_val = int(n_total * val_ratio)
+    n_train, n_val, _ = _split_counts(len(matched), train_ratio, val_ratio)
 
     rows: list[ManifestEntry] = []
     for index, (image, mask) in enumerate(matched):
@@ -136,9 +136,10 @@ def build_manifest_from_directories(
 
 
 def write_manifest(output_path: str | Path, entries: list[ManifestEntry]) -> None:
-    """Write manifest entries to CSV."""
+    """Write manifest entries to CSV with repo-relative paths when possible."""
 
     output = resolve_path(output_path)
+    path_root = Path.cwd().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=REQUIRED_MANIFEST_COLUMNS)
@@ -146,8 +147,8 @@ def write_manifest(output_path: str | Path, entries: list[ManifestEntry]) -> Non
         for entry in entries:
             writer.writerow(
                 {
-                    "image_path": str(entry.image_path),
-                    "mask_path": str(entry.mask_path),
+                    "image_path": _manifest_path(entry.image_path, root=path_root),
+                    "mask_path": _manifest_path(entry.mask_path, root=path_root),
                     "source": entry.source,
                     "patient_id": entry.patient_id,
                     "split": entry.split,
@@ -202,3 +203,50 @@ def _entry_from_row(row: dict[str, str], root: Path) -> ManifestEntry:
         patient_id=(row.get("patient_id") or "").strip(),
         split=(row.get("split") or "").strip().lower(),
     )
+
+
+def _validate_split_ratios(train_ratio: float, val_ratio: float) -> None:
+    if not 0 <= train_ratio <= 1:
+        raise ValueError("train_ratio must be between 0 and 1.")
+    if not 0 <= val_ratio <= 1:
+        raise ValueError("val_ratio must be between 0 and 1.")
+    if train_ratio + val_ratio >= 1:
+        raise ValueError("train_ratio + val_ratio must be less than 1 to leave a test split.")
+
+
+def _split_counts(n_total: int, train_ratio: float, val_ratio: float) -> tuple[int, int, int]:
+    if n_total < 3:
+        raise ValueError(
+            "At least 3 matched image/mask pairs are required for train/val/test splits."
+        )
+
+    n_train = int(n_total * train_ratio)
+    n_val = int(n_total * val_ratio)
+    n_test = n_total - n_train - n_val
+    counts = {"train": n_train, "val": n_val, "test": n_test}
+
+    for split in ("train", "val", "test"):
+        if counts[split] == 0:
+            donor = max(counts, key=counts.get)
+            if counts[donor] <= 1:
+                raise ValueError("Could not create non-empty train/val/test splits.")
+            counts[donor] -= 1
+            counts[split] = 1
+
+    return counts["train"], counts["val"], counts["test"]
+
+
+def _manifest_path(path: Path, root: Path) -> str:
+    value = Path(path)
+    if not value.is_absolute():
+        return value.as_posix()
+
+    try:
+        relative = value.resolve().relative_to(root)
+    except ValueError:
+        try:
+            relative = Path(os.path.relpath(value, root))
+        except ValueError:
+            return str(value)
+
+    return relative.as_posix()

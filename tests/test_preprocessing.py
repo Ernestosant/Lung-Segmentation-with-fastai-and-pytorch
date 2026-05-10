@@ -20,6 +20,15 @@ class PreprocessingTests(unittest.TestCase):
 
         np.testing.assert_array_equal(binary, np.array([[0, 0], [1, 1]], dtype=np.uint8))
 
+    def test_binarize_mask_respects_opencv_bgr_channel_order(self) -> None:
+        blue_in_bgr = np.array([[[255, 0, 0]]], dtype=np.uint8)
+
+        bgr_binary = binarize_mask(blue_in_bgr, threshold=50, channel_order="BGR")
+        rgb_binary = binarize_mask(blue_in_bgr, threshold=50, channel_order="RGB")
+
+        np.testing.assert_array_equal(bgr_binary, np.array([[0]], dtype=np.uint8))
+        np.testing.assert_array_equal(rgb_binary, np.array([[1]], dtype=np.uint8))
+
     def test_equalize_histogram_preserves_rgb_shape(self) -> None:
         image = np.zeros((8, 8, 3), dtype=np.uint8)
         image[:, 4:] = 180

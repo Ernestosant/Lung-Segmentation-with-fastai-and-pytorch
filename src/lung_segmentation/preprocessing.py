@@ -44,7 +44,7 @@ def read_mask(path: str | Path, threshold: int = 127) -> np.ndarray:
     mask = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
     if mask is None:
         raise FileNotFoundError(f"Could not read mask: {path}")
-    return binarize_mask(mask, threshold=threshold)
+    return binarize_mask(mask, threshold=threshold, channel_order="BGR")
 
 
 def write_rgb(path: str | Path, image: np.ndarray) -> None:
@@ -75,24 +75,50 @@ def equalize_histogram_rgb(image: np.ndarray | Image.Image) -> np.ndarray:
     return cv2.cvtColor(equalized, cv2.COLOR_GRAY2RGB)
 
 
-def binarize_mask(mask: np.ndarray | Image.Image, threshold: int = 127) -> np.ndarray:
-    """Convert a grayscale/RGB mask to binary class ids in {0, 1}."""
+def binarize_mask(
+    mask: np.ndarray | Image.Image,
+    threshold: int = 127,
+    channel_order: str = "RGB",
+) -> np.ndarray:
+    """Convert a grayscale or color mask to binary class ids in {0, 1}.
+
+    PIL inputs are treated as RGB/RGBA. Arrays from OpenCV should pass
+    ``channel_order="BGR"`` because ``cv2.imread`` returns BGR/BGRA channels.
+    """
 
     if isinstance(mask, Image.Image):
         mask = np.asarray(mask)
+        channel_order = "RGB"
     else:
         mask = np.asarray(mask)
 
     if mask.ndim == 3:
-        if mask.shape[2] == 4:
-            mask = mask[:, :, :3]
-        mask = cv2.cvtColor(mask.astype(np.uint8), cv2.COLOR_RGB2GRAY)
+        mask = _color_mask_to_gray(mask, channel_order=channel_order)
 
     if mask.dtype != np.uint8:
         mask = np.clip(mask, 0, 255).astype(np.uint8)
 
     _, binary = cv2.threshold(mask, threshold, 1, cv2.THRESH_BINARY)
     return binary.astype(np.uint8)
+
+
+def _color_mask_to_gray(mask: np.ndarray, channel_order: str) -> np.ndarray:
+    order = channel_order.upper()
+    if mask.dtype != np.uint8:
+        mask = np.clip(mask, 0, 255).astype(np.uint8)
+
+    if mask.shape[2] == 3 and order == "RGB":
+        return cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
+    if mask.shape[2] == 3 and order == "BGR":
+        return cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    if mask.shape[2] == 4 and order == "RGB":
+        return cv2.cvtColor(mask, cv2.COLOR_RGBA2GRAY)
+    if mask.shape[2] == 4 and order == "BGR":
+        return cv2.cvtColor(mask, cv2.COLOR_BGRA2GRAY)
+    raise ValueError(
+        "Expected a grayscale, RGB/BGR, or RGBA/BGRA mask; "
+        f"got shape {mask.shape} with channel_order={channel_order!r}"
+    )
 
 
 def postprocess_mask(

@@ -14,8 +14,9 @@ segmented COVID-19 cases. The repository does not track medical images or masks.
 image_path,mask_path,source,patient_id,split
 ```
 
-- `image_path`: absolute path or path relative to the repository root.
-- `mask_path`: matching binary lung mask path.
+- `image_path`: path relative to the repository root whenever possible.
+- `mask_path`: matching binary lung mask path, preferably relative to the
+  repository root.
 - `source`: dataset label, for example `montgomery` or `covid_manual`.
 - `patient_id`: patient identifier when available; otherwise use the image stem
   and document that image-level splitting was used.
@@ -26,6 +27,9 @@ image_path,mask_path,source,patient_id,split
 Use a fixed 70/15/15 train/validation/test split. Prefer patient-level splitting
 to prevent leakage across splits. When patient identifiers are unavailable, use a
 seeded image-level split and report it as a limitation.
+
+The manifest builder validates split ratios and requires enough matched
+image/mask pairs to produce non-empty train, validation, and test splits.
 
 ## Data Handling
 

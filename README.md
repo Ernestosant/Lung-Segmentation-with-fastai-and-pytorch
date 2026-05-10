@@ -71,9 +71,10 @@ python scripts/build_manifest.py `
 ```
 
 If images come from multiple sources, create one manifest per source and merge
-the rows while preserving the same columns. Prefer patient-level splits. If
-patient identifiers are unavailable, use image stems and document this
-limitation in `docs/dataset.md`.
+the rows while preserving the same columns. The manifest builder writes paths
+relative to the repository root when possible to avoid committing machine-local
+directory structure. Prefer patient-level splits. If patient identifiers are
+unavailable, use image stems and document this limitation in `docs/dataset.md`.
 
 ## Commands
 
