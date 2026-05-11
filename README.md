@@ -60,8 +60,10 @@ python scripts/kaggle_reproduce.py `
   --publish-docs
 ```
 
-See `docs/results.md` for per-source metrics, local model artifact hashes, and
-reproduction notes.
+`--publish-docs` refreshes `segmentation.PNG` and writes generated run output
+under `artifacts/metrics/`; the curated `docs/results.md` page is maintained
+manually. See `docs/results.md` for per-source metrics, local model artifact
+hashes, and reproduction notes.
 
 ## Repository Layout
 

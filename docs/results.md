@@ -57,6 +57,7 @@ Downloaded local metric artifacts:
 - `artifacts/metrics/resnet34_test_per_image.csv`
 - `artifacts/metrics/results_table.md`
 - `artifacts/metrics/model_artifacts.json`
+- `artifacts/metrics/generated_model_results.md` when `--publish-docs` is used
 
 ## Local Model Artifacts
 

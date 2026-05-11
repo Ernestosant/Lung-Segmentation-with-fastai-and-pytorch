@@ -172,7 +172,7 @@ def _write_binary_mask(input_path: Path, output_path: Path, size: int) -> None:
         raise FileNotFoundError(f"Could not read mask: {input_path}")
     if mask.ndim == 3:
         mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(mask.astype("uint8"), 127, 1, cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(mask.astype("uint8"), 127, 255, cv2.THRESH_BINARY)
     binary = cv2.resize(binary, (size, size), interpolation=cv2.INTER_NEAREST)
     cv2.imwrite(str(output_path), binary.astype("uint8"))
 

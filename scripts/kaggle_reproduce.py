@@ -52,7 +52,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--publish-docs",
         action="store_true",
-        help="Update segmentation.PNG and docs/results.md from generated outputs.",
+        help=(
+            "Refresh segmentation.PNG from generated examples. "
+            "The curated docs/results.md file is not overwritten."
+        ),
     )
     return parser
 
@@ -264,8 +267,8 @@ def _publish_docs(
     figure_paths: dict[str, Path],
     entries: list[Any],
 ) -> None:
-    docs_results = resolve_path("docs/results.md")
-    _write_results_report(docs_results, summaries, figure_paths, entries)
+    generated_report = resolve_path("artifacts/metrics/generated_model_results.md")
+    _write_results_report(generated_report, summaries, figure_paths, entries)
 
     if figure_paths:
         preferred = figure_paths.get("resnet34") or next(iter(figure_paths.values()))
