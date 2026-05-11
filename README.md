@@ -6,6 +6,9 @@ Gradio interface for model inspection.
 
 ![Sample lung segmentation](segmentation.PNG)
 
+The qualitative figure is built from public, non-private Kaggle examples and
+current ResNet34 predictions from the reproduced test run.
+
 ## Research Positioning
 
 This repository is an educational and research-oriented implementation. It is
@@ -27,6 +30,41 @@ Relevant reporting references:
 [FDA GMLP](https://www.fda.gov/medical-devices/software-medical-device-samd/good-machine-learning-practice-medical-device-development-guiding-principles),
 and [Model Cards](https://huggingface.co/docs/hub/model-cards).
 
+## Results
+
+Final test metrics were regenerated in a private Kaggle Kernel on a
+Tesla P100-PCIE-16GB. The run used the public Kaggle dataset
+[`nikhilpandey360/chest-xray-masks-and-labels`](https://www.kaggle.com/datasets/nikhilpandey360/chest-xray-masks-and-labels),
+a deterministic 70/15/15 split, and 386 test images.
+
+| Model | Split | Dice | IoU | Pixel Accuracy |
+| --- | --- | ---: | ---: | ---: |
+| U-Net ResNet18 | Test | 0.9553 | 0.9157 | 0.9772 |
+| U-Net ResNet34 | Test | 0.9559 | 0.9170 | 0.9776 |
+
+Reproduce the manifest and run locally/Kaggle with:
+
+```powershell
+python -m pip install --force-reinstall --no-cache-dir `
+  torch==2.5.1+cu121 torchvision==0.20.1+cu121 `
+  --index-url https://download.pytorch.org/whl/cu121
+
+python scripts/prepare_kaggle_dataset.py `
+  --input-dir /kaggle/input/chest-xray-masks-and-labels `
+  --out data/manifest.csv `
+  --preprocess-size 256
+
+python scripts/kaggle_reproduce.py `
+  --models resnet18 resnet34 `
+  --split test `
+  --publish-docs
+```
+
+`--publish-docs` refreshes `segmentation.PNG` and writes generated run output
+under `artifacts/metrics/`; the curated `docs/results.md` page is maintained
+manually. See `docs/results.md` for per-source metrics, local model artifact
+hashes, and reproduction notes.
+
 ## Repository Layout
 
 ```text
@@ -38,6 +76,7 @@ scripts/                   Utility scripts, including manifest creation
 src/lung_segmentation/     Reusable package code
 tests/                     Unit and CLI smoke tests
 artifacts/                 Local-only model, metric, and prediction outputs
+MODEL_CARD.md              Public model card for scholarship/review contexts
 ```
 
 ## Setup
@@ -129,6 +168,14 @@ accuracy.
 The original Colab workflow is preserved at
 `notebooks/training_experiments.ipynb`. It is now historical context only; the
 reproducible path is the package and CLI workflow.
+
+## Academic Relevance
+
+This project demonstrates biomedical image segmentation using deep learning,
+reproducible experiment design, dataset manifest management, segmentation
+metrics, CLI-based evaluation, and responsible handling of medical imaging data.
+It is relevant to computer-aided analysis, radiological preprocessing, and
+medical AI research.
 
 ## License
 

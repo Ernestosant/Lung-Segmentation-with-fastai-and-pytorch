@@ -161,7 +161,7 @@ def build_fastai_dataloaders(config: dict[str, Any]) -> Any:
 
     from fastai.data.block import DataBlock
     from fastai.data.transforms import FuncSplitter, Normalize
-    from fastai.vision.augment import aug_transforms
+    from fastai.vision.augment import Resize, ResizeMethod, aug_transforms
     from fastai.vision.data import ImageBlock, MaskBlock, imagenet_stats
 
     root = Path(config.get("_project_root", Path.cwd()))
@@ -185,6 +185,7 @@ def build_fastai_dataloaders(config: dict[str, Any]) -> Any:
         get_items=lambda _: items,
         splitter=FuncSplitter(lambda item: image_to_split[str(item)] == "val"),
         get_y=lambda item: image_to_mask[str(item)],
+        item_tfms=Resize((image_size, image_size), method=ResizeMethod.Squish),
         batch_tfms=[
             *aug_transforms(size=(image_size, image_size)),
             Normalize.from_stats(*imagenet_stats),
